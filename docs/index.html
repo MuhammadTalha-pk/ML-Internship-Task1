@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Can Historical Search Signals Predict Future Content Decline? | Muhammad Talha</title>
+  <meta name="description" content="A time-aware machine-learning study using FlyRank search-performance data to rank pages at risk of future visibility decline.">
+  <style>
+    :root{
+      --bg:#f7f9fb; --card:#ffffff; --text:#15222b; --muted:#5f6f7a;
+      --line:#dfe7ec; --accent:#0c7c59; --accent-soft:#e9f6f1;
+      --code:#eef3f6;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text); background:var(--bg); line-height:1.65;
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:32px 22px 70px}
+    .hero{
+      background:linear-gradient(135deg,#e9f6f1 0%,#ffffff 70%);
+      border:1px solid var(--line); border-radius:20px; padding:42px 38px; margin-bottom:28px;
+    }
+    h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.08;margin:.1em 0 .35em}
+    h2{font-size:1.85rem;margin-top:2.2em;border-bottom:1px solid var(--line);padding-bottom:.25em}
+    h3{font-size:1.2rem;margin-top:1.7em}
+    p{margin:.75em 0}
+    .subtitle{font-size:1.18rem;color:var(--muted);max-width:800px}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .pill{background:var(--accent-soft);border:1px solid #cfe9df;border-radius:999px;padding:6px 10px;font-size:.92rem}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;margin:20px 0}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}
+    .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+    .kpi b{display:block;font-size:1.55rem;color:var(--accent)}
+    blockquote{margin:1.2em 0;padding:14px 18px;border-left:4px solid var(--accent);background:var(--accent-soft)}
+    table{width:100%;border-collapse:collapse;margin:18px 0;background:white}
+    th,td{padding:10px 12px;border:1px solid var(--line);text-align:left}
+    th{background:#f0f5f7}
+    code{background:var(--code);padding:2px 5px;border-radius:5px}
+    pre{background:#12212b;color:#eef7f4;padding:16px;border-radius:12px;overflow:auto}
+    img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+    figure{margin:28px 0}
+    figcaption{font-size:.95rem;color:var(--muted);margin-top:8px}
+    a{color:#0b6fbd}
+    .note{background:#fff8e8;border:1px solid #f0ddb0;border-radius:12px;padding:14px 16px}
+    footer{margin-top:48px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted)}
+    @media(max-width:760px){
+      .hero{padding:28px 22px}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+      table{font-size:.9rem}
+      .wrap{padding:18px 12px 50px}
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div class="pill" style="display:inline-block">FlyRank ML Capstone · Freestyle Growth / Momentum Prediction</div>
+    <h1>Can Historical Search Signals Predict Future Content Decline?</h1>
+    <p class="subtitle">A time-aware ranking study for prioritizing which content pages an editor should review first.</p>
+    <div class="meta">
+      <span class="pill">Author: Muhammad Talha</span>
+      <span class="pill">Random Forest</span>
+      <span class="pill">Sealed May→June 2026 holdout</span>
+      <span class="pill">Primary metric: Precision@50</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Abstract</h2>
+    <p>This study asks whether historical Google Search Console performance signals can identify and rank content pages that are at higher risk of a meaningful decline in search visibility during the following month. I used the FlyRank internship warehouse, aggregating daily search-performance records into monthly page-level observations and building leakage-safe features from the prediction month and the month immediately before it. I compared a transparent momentum-based baseline with Logistic Regression and Random Forest models using time-aware validation, then froze the selected model before opening a May→June 2026 sealed holdout. On the sealed holdout, the Random Forest achieved <strong>Precision@50 of 0.820</strong>, compared with <strong>0.620 for the transparent baseline</strong>, while the test-set decline base rate was <strong>0.544</strong>. The final output is a ranked human-review queue designed to help editors decide which pages to inspect first; it is decision-support, not an automatic refresh system or a causal model of Google Search.</p>
+
+    <div class="kpis">
+      <div class="kpi"><b>0.820</b>Model Precision@50</div>
+      <div class="kpi"><b>0.620</b>Baseline Precision@50</div>
+      <div class="kpi"><b>1.507×</b>Lift@50 vs base rate</div>
+      <div class="kpi"><b>78,137</b>Sealed-test rows</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Problem Framing</h2>
+    <p>Editors cannot manually inspect every content page every month. The practical decision is not simply “will this page decline?” but:</p>
+    <blockquote><strong>Which pages should an editor review first when review capacity is limited?</strong></blockquote>
+    <p>The unit of analysis is one pseudonymized content page at one monthly prediction date. The system produces a ranked risk score and a priority-review queue. A false positive can waste reviewer time; a false negative can leave an important future decline unsurfaced.</p>
+    <p>Machine learning may help because decline risk can be associated with several signals at the same time: current visibility, clicks, CTR, ranking position, recent changes in impressions and clicks, and changes in position.</p>
+    <div class="note"><strong>Claim boundary:</strong> this work does not claim to predict Google’s algorithm, identify why a page declined, or prove that refreshing a page will improve performance.</div>
+  </section>
+
+  <section>
+    <h2>2. Data Safety</h2>
+    <p>The project uses the FlyRank ML Internship warehouse release hosted on Hugging Face. The main source is <code>fact_content_daily_performance</code>, whose daily grain is <code>report_date × client_hash_id × content_hash_id</code>.</p>
+    <p>DuckDB queried and aggregated the remote Parquet data before pandas received the monthly page-level frame. Across December 2025 through June 2026, the monthly aggregation contained <strong>1,202,786 page-month rows</strong>.</p>
+
+    <h3>Time windows</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Prediction month(s)</th><th>Outcome month</th></tr></thead>
+      <tbody>
+        <tr><td>Historical context</td><td>December 2025</td><td>—</td></tr>
+        <tr><td>Training</td><td>January 2026</td><td>February 2026</td></tr>
+        <tr><td>Training</td><td>February 2026</td><td>March 2026</td></tr>
+        <tr><td>Training</td><td>March 2026</td><td>April 2026</td></tr>
+        <tr><td>Validation</td><td>April 2026</td><td>May 2026</td></tr>
+        <tr><td>Sealed test</td><td>May 2026</td><td>June 2026</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Population and exclusions</h3>
+    <p>Rows were included only when <code>gsc_data_available IS TRUE</code>. A modeling row required at least 20 GSC-available days in the previous, prediction, and outcome months, plus at least 100 impressions in the previous and prediction months. No minimum future-impressions threshold was applied.</p>
+    <p>Client names, domains, URLs, raw private queries, credentials, product flags, future-month values, <code>trend_direction</code>, and <code>trend_pct</code> were excluded from predictive inputs. Pseudonymous IDs were retained only for grouping, joining, ranking output, and audit.</p>
+  </section>
+
+  <section>
+    <h2>3. Baseline</h2>
+    <p>The transparent baseline was:</p>
+    <pre><code>baseline_score = max(-impression_momentum_log, 0) × log_avg_daily_impressions</code></pre>
+    <p>Pages with more negative recent impression momentum receive higher concern, with more priority when current visibility is also higher. The baseline was evaluated on exactly the same rows, target, split, and ranking metrics as the learned model.</p>
+  </section>
+
+  <section>
+    <h2>4. Model / Analysis</h2>
+    <p>The final target was <code>future_decline = 1</code> when average daily impressions in the following month were at least <strong>30% lower</strong> than in the prediction month. The 30% threshold was chosen on development data before the June holdout was opened.</p>
+
+    <h3>Features</h3>
+    <p>The final model used nine historical features: log average daily impressions, log average daily clicks, current CTR, current average position, impression-day ratio, impression momentum, click momentum, position change, and CTR change.</p>
+
+    <h3>Candidate models</h3>
+    <p>I compared Logistic Regression with Random Forest. The random seed was <strong>42</strong>. Random Forest was selected because it achieved the strongest validation Precision@50, the pre-specified operational metric.</p>
+
+    <h3>Leakage controls</h3>
+    <p>No future-month metric, label-derived field, product flag, client ID, or content ID was used as a predictive feature. The model specification, nine-feature list, 30% target, baseline formula, and hyperparameters were frozen before opening June.</p>
+  </section>
+
+  <section>
+    <h2>5. Evaluation</h2>
+    <p>The split was time-aware: January–March prediction months were used for training, April→May for validation, and May→June for the final sealed test.</p>
+
+    <figure>
+      <img src="images/decline_rate_over_time.png" alt="Future-decline rate by prediction month">
+      <figcaption>The future-decline rate changed materially over time, reinforcing the need for an out-of-time test rather than a random row split.</figcaption>
+    </figure>
+
+    <h3>Sealed May→June result</h3>
+    <p>The frozen Random Forest was retrained on all <strong>239,863 development rows</strong> and evaluated once on the sealed test of <strong>78,137 eligible page-month rows across 39 pseudonymized clients</strong>. The test base rate was <strong>54.4%</strong>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Method</th><th>Base rate</th><th>P@10</th><th>P@20</th><th>P@50</th><th>Lift@50</th><th>Avg. Precision</th><th>ROC-AUC</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Transparent baseline</td><td>0.544</td><td>0.700</td><td>0.700</td><td>0.620</td><td>1.139</td><td>0.574</td><td>0.524</td></tr>
+        <tr><td><strong>Frozen Random Forest</strong></td><td>0.544</td><td><strong>0.800</strong></td><td><strong>0.850</strong></td><td><strong>0.820</strong></td><td><strong>1.507</strong></td><td><strong>0.644</strong></td><td><strong>0.617</strong></td></tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <img src="images/sealed_test_precision_comparison.png" alt="Sealed-test ranking performance">
+      <figcaption>On the sealed future holdout, the model concentrated future declines near the top of the review queue more effectively than the transparent baseline.</figcaption>
+    </figure>
+
+    <p>The primary result is <strong>Precision@50 = 0.820</strong>: 41 of the model’s top 50 review candidates met the future-decline definition, compared with 31 of 50 for the transparent baseline.</p>
+
+    <h3>Error analysis</h3>
+    <p>The sealed top-50 queue contained <strong>41 true declines and 9 false positives</strong>. The first three true declines immediately outside the queue were ranks 51, 52, and 53. This suggests that the rank-50 cutoff is an operational capacity limit, not a natural boundary between “decline” and “safe.”</p>
+  </section>
+
+  <section>
+    <h2>6. Interpretation</h2>
+    <table>
+      <thead><tr><th>Feature</th><th>Importance</th></tr></thead>
+      <tbody>
+        <tr><td>Impression momentum</td><td>0.2458</td></tr>
+        <tr><td>Current CTR</td><td>0.1999</td></tr>
+        <tr><td>Current impressions</td><td>0.1580</td></tr>
+        <tr><td>Click momentum</td><td>0.1235</td></tr>
+        <tr><td>Position change</td><td>0.1009</td></tr>
+        <tr><td>Current clicks</td><td>0.0780</td></tr>
+        <tr><td>Current position</td><td>0.0539</td></tr>
+        <tr><td>CTR change</td><td>0.0399</td></tr>
+        <tr><td>Impression-day ratio</td><td>0.0000</td></tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <img src="images/final_feature_importance.png" alt="Final Random Forest feature importance">
+      <figcaption>The final model relied most on recent impression momentum, current CTR, current visibility, click momentum, and position movement. These are predictive signals, not causal effects.</figcaption>
+    </figure>
+
+    <p>The zero importance for <code>impression_day_ratio</code> is a useful negative result: it did not contribute materially to the final fitted Random Forest.</p>
+
+    <h3>Limitations & honest framing</h3>
+    <p>This project supports predictive ranking, not causal inference. A high model score does not mean that refreshing a page will improve search performance. The analysis does not identify or predict Google’s ranking algorithm.</p>
+    <p>The panel is unbalanced; monthly coverage changes across clients and pages. The modeling population also requires sufficient outcome-month coverage, so the evaluated population may not represent pages with very sparse or missing future measurement.</p>
+    <p>The decline base rate changed from 23.8% in training to 46.4% in validation and 54.4% in the sealed test. The 30% decline threshold is a practical proxy rather than a universal definition. The Random Forest score is used for ranking and should not be interpreted as a calibrated probability.</p>
+  </section>
+
+  <section>
+    <h2>7. Ranked Recommendations</h2>
+    <p>The final output is a <strong>priority-review queue</strong>, not an automatic refresh list. The first 50 pages receive <code>review_page_before_refresh_decision</code>; pages below the cutoff remain <code>monitor</code>.</p>
+
+    <table>
+      <thead><tr><th>Rank</th><th>Pseudonymous content</th><th>Score</th><th>Reason code</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>content_12d95d7f8c2728ad</td><td>0.783</td><td>visibility_clicks_and_position_weakened</td></tr>
+        <tr><td>2</td><td>content_b63094bd417908e9</td><td>0.782</td><td>visibility_momentum_down</td></tr>
+        <tr><td>3</td><td>content_6a49f91a2da31c46</td><td>0.778</td><td>visibility_down_position_weaker</td></tr>
+        <tr><td>4</td><td>content_b9acd1ebff7d34ff</td><td>0.775</td><td>visibility_clicks_and_position_weakened</td></tr>
+        <tr><td>5</td><td>content_d2def933ed902af2</td><td>0.770</td><td>visibility_down_position_weaker</td></tr>
+      </tbody>
+    </table>
+
+    <p>An editor should investigate search intent, CTR context, competing content, seasonality, recent content changes, and permitted query/ranking movement before deciding whether to refresh, rewrite, consolidate, monitor, or take no action.</p>
+  </section>
+
+  <section>
+    <h2>8. Reproducibility</h2>
+    <p><strong>Repository:</strong> <a href="https://github.com/MuhammadTalha-pk/ML_Internship_FlyRankAI">ML_Internship_FlyRankAI</a></p>
+    <p><strong>Primary notebook:</strong> <a href="https://github.com/MuhammadTalha-pk/ML_Internship_FlyRankAI/blob/main/work/notebooks/capstone.ipynb">work/notebooks/capstone.ipynb</a></p>
+    <pre><code>git clone https://github.com/MuhammadTalha-pk/ML_Internship_FlyRankAI.git
+cd ML_Internship_FlyRankAI
+pip install -r requirements.txt</code></pre>
+    <p>The gated Hugging Face token must be stored securely as <code>HF_TOKEN</code> in Colab Secrets or an environment variable and must never be committed to the public repository.</p>
+    <p>Random seed: <strong>42</strong>. The notebook creates validation, model-selection, and sealed-test JSON receipts so the final holdout claim is auditable from the repository.</p>
+  </section>
+
+  <section>
+    <h2>9. Acknowledgments & Data Credit</h2>
+    <p>Built on the <a href="https://flyrank.ai">FlyRank ML Internship dataset</a>.</p>
+    <p>I also acknowledge the FlyRank Machine Learning Internship materials and warehouse documentation that guided the project’s public-safety, leakage-control, baseline, validation, and reproducibility practices.</p>
+  </section>
+
+  <footer>
+    <p>© 2026 Muhammad Talha · Machine Learning Capstone</p>
+  </footer>
+</main>
+</body>
+</html>

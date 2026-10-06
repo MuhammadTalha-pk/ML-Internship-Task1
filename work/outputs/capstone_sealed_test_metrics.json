@@ -1,0 +1,46 @@
+{
+  "status": "sealed holdout opened once after model selection",
+  "prediction_month": "2026-05",
+  "outcome_month": "2026-06",
+  "target_definition": "future average daily impressions at least 30% below prediction month",
+  "selected_model": "Random Forest",
+  "selection_metric": "precision_at_50",
+  "random_seed": 42,
+  "features": [
+    "log_avg_daily_impressions",
+    "log_avg_daily_clicks",
+    "current_ctr_pct_feature",
+    "current_avg_position_feature",
+    "impression_day_ratio",
+    "impression_momentum_log",
+    "click_momentum_log",
+    "position_change",
+    "ctr_change"
+  ],
+  "development_rows": 239863,
+  "sealed_test_rows": 78137,
+  "sealed_test_clients": 39,
+  "sealed_test_base_rate": 0.544185,
+  "results": [
+    {
+      "method": "Transparent baseline",
+      "base_rate": 0.544,
+      "precision_at_10": 0.7,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.62,
+      "lift_at_50": 1.139,
+      "average_precision": 0.574,
+      "roc_auc": 0.524
+    },
+    {
+      "method": "Frozen Random Forest",
+      "base_rate": 0.544,
+      "precision_at_10": 0.8,
+      "precision_at_20": 0.85,
+      "precision_at_50": 0.82,
+      "lift_at_50": 1.507,
+      "average_precision": 0.644,
+      "roc_auc": 0.617
+    }
+  ]
+}

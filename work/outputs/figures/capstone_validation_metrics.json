@@ -1,0 +1,51 @@
+{
+  "random_seed": 42,
+  "target_definition": "future average daily impressions at least 30% below prediction month",
+  "training_prediction_months": [
+    "2026-01",
+    "2026-02",
+    "2026-03"
+  ],
+  "validation_prediction_month": "2026-04",
+  "validation_outcome_month": "2026-05",
+  "features": [
+    "log_avg_daily_impressions",
+    "log_avg_daily_clicks",
+    "current_ctr_pct_feature",
+    "current_avg_position_feature",
+    "impression_day_ratio",
+    "impression_momentum_log",
+    "click_momentum_log",
+    "position_change",
+    "ctr_change"
+  ],
+  "results": [
+    {
+      "method": "Transparent baseline",
+      "base_rate": 0.464,
+      "precision_at_10": 0.6,
+      "precision_at_20": 0.7,
+      "precision_at_50": 0.56,
+      "average_precision": 0.528,
+      "roc_auc": 0.57
+    },
+    {
+      "method": "Logistic Regression",
+      "base_rate": 0.464,
+      "precision_at_10": 0.9,
+      "precision_at_20": 0.8,
+      "precision_at_50": 0.66,
+      "average_precision": 0.577,
+      "roc_auc": 0.634
+    },
+    {
+      "method": "Random Forest",
+      "base_rate": 0.464,
+      "precision_at_10": 0.9,
+      "precision_at_20": 0.85,
+      "precision_at_50": 0.9,
+      "average_precision": 0.555,
+      "roc_auc": 0.612
+    }
+  ]
+}

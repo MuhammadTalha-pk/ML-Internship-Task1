@@ -1,0 +1,10 @@
+{
+  "selected_model": "Random Forest",
+  "selection_metric": "precision_at_50",
+  "validation_precision_at_50": 0.9,
+  "validation_base_rate": 0.464,
+  "random_seed": 42,
+  "feature_count": 9,
+  "june_holdout_opened": false,
+  "selection_note": "Random Forest selected because it had the best pre-specified operational metric, Precision@50. Logistic Regression had stronger global ranking metrics."
+}
